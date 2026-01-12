@@ -2,38 +2,35 @@ import os
 import google.generativeai as genai
 from tavily import TavilyClient
 
-# 初始化 API，从 GitHub Secrets 读取密钥
-TAVILY_KEY = os.getenv("TAVILY_API_KEY")
-GEMINI_KEY = os.getenv("GEMINI_API_KEY")
-
-tavily = TavilyClient(api_key=TAVILY_KEY)
-genai.configure(api_key=GEMINI_KEY)
+# 初始化 API
+tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def run_analysis():
-    # 搜索指令：锁定美股小盘股 + 成交量突破 + 硬核利好
+    # 搜索指令：锁定美股小盘股异动
     query = "US small-cap stocks with massive volume breakout and hardcore positive news today"
-    print("正在抓取实时市场数据...")
+    print("正在搜集数据...")
     search_data = tavily.search(query=query, search_depth="advanced")
 
-    # 修正后的模型名称：使用最新的 flash 稳定版
+    # 使用最稳定的模型名称，防止找不到模型
     model = genai.GenerativeModel('gemini-1.5-flash-latest')
     
     prompt = f"""
-    你是一位专业的量化交易专家。请根据以下实时数据进行筛选：
-    {search_data}
-
-    你的筛选必须严格遵守以下【四大指标】：
-    1. 巨大的成交量突破（对比近期均量）。
-    2. 收盘位置处于当日高位。
-    3. 盘后表现强劲。
-    4. 必须有“硬核正面利好”（如财报超预期、重大合同、FDA审批等）。
-
-    请以 Markdown 表格形式输出：
-    股票代码 | 成交量异动 | 收盘/盘后状态 | 硬核利好解析 | 综合评分(1-10)
+    分析以下实时数据：{search_data}
+    
+    请严格按照用户要求的【四大过滤标准】筛选股票：
+    1. 成交量巨量突破。
+    2. 收盘接近全天最高。
+    3. 盘后延续强势。
+    4. 必须有“硬核利好”（财报、FDA、合同）。
+    
+    请以表格输出：股票代码 | 利好解析 | 评分 | 操作建议
     """
     
     response = model.generate_content(prompt)
-    print("\n--- AI 选股分析报告 ---")
+    print("\n" + "="*30)
+    print("AI 选股分析报告")
+    print("="*30)
     print(response.text)
 
 if __name__ == "__main__":
