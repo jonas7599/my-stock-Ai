@@ -14,11 +14,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10' # 升级到 3.10 更稳定
 
       - name: Install dependencies
         run: |
-          pip install google-generativeai tavily-python
+          pip install --upgrade google-generativeai tavily-python
 
       - name: Run Analysis
         env:
