@@ -2,7 +2,6 @@ import os
 import google.generativeai as genai
 from tavily import TavilyClient
 
-# 初始化 API
 tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -11,34 +10,35 @@ def run_ignition_hunter():
     target_model = next((m for m in available_models if 'flash' in m.lower()), available_models[0])
     model = genai.GenerativeModel(target_model)
 
-    # 1. 深度搜索词：聚焦缩量横盘中的异动信号
+    # 1. 强化搜索词：强制要求具体的代码 (Ticker) 和盘后异动数据
     query = """
-    US small-cap stocks: low volume consolidation with occasional spikes, 
-    increasing accumulation/distribution line, rising cost basis, 
-    positive news expected within 1 month, stocks near breakout from base.
+    US small-cap stocks with unusual volume spikes today, 
+    low float stocks consolidation near breakout, 
+    stocks with positive Order Flow and high Bid/Ask ratio,
+    upcoming FDA catalysts or earnings in next 2 weeks.
     """
-    print(f"📡 正在扫描【吸筹待启动】标的：监控换手率与缩量异动...")
+    print(f"📡 正在执行精准深度扫描：锁定【换手率异动+委比占优】个股...")
     search_data = tavily.search(query=query, search_depth="advanced")
 
-    # 2. 策略 Prompt：强化指标分析
+    # 2. 强化 Prompt：明确要求 AI 必须搜寻代码和具体数值
     prompt = f"""
-    分析以下数据：{search_data}
+    分析数据：{search_data}
 
-    你的目标是寻找“即将点火启动”的埋伏股。
+    作为顶级操盘手，请寻找“即将点火启动”的个股。
     
-    分析维度：
-    1. 吸筹特征：股价长期横盘，但换手率缓慢上升，成交量出现零星“红柱”（吸筹）。
-    2. 指标暗示：委比偏正、均线高度粘合、价格处于震荡区间上沿。
-    3. 利好潜伏：寻找未来 2-4 周内有重大事件（财报、PDUFA、产品发布）的标的。
+    必须满足以下硬性条件：
+    - 必须输出明确的【股票代码】。
+    - 处于缩量横盘后的第一个放量信号。
+    - 板块属于当前热点（AI、低空经济、生物医药等）。
 
-    请按表格输出：
-    | 代码 | 吸筹阶段 (初期/中期/就绪) | 换手率/量能异动 | 潜伏利好 | 预估点火日期 | 埋伏参考价 | 止损参考 |
+    请严格按此表格输出，若数据不全请根据市场经验预估：
+    | 代码 | 行业 | 换手率/量能异动 | 潜伏利好 (FDA/财报/合同) | 预估点火窗口 | 建议埋伏区间 | 止损位 |
     | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
     """
 
     response = model.generate_content(prompt)
     print("\n" + "🎯"*15)
-    print("💎 点火猎人·吸筹启动监控 💎")
+    print("💎 点火猎人·精准启动监控 💎")
     print("🎯"*15)
     print(response.text)
 
