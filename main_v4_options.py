@@ -44,26 +44,4 @@ def run_options_intelligence():
 
 if __name__ == "__main__":
     run_options_intelligence()
-🚀 自动化配置文件：.github/workflows/run_v4.yml
-YAML
 
-name: Stock AI Bot - Options Intelligence
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '00 22 * * *' # 每天收盘 1 小时后运行
-
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: pip install --upgrade google-generativeai tavily-python
-      - name: Run Options Intelligence
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-        run: python main_v4_options.py
