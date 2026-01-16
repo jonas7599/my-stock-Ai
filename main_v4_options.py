@@ -5,45 +5,45 @@ from tavily import TavilyClient
 tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-def run_options_intelligence():
-    # 自动获取当前最快模型 (Gemini 2.0 Flash)
+def run_short_term_burst_sniper():
     available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
     target_model = next((m for m in available_models if 'flash' in m.lower()), available_models[0])
     model = genai.GenerativeModel(target_model)
 
-    # 1. 广域扫描：重点搜寻带代码（$TICKER）的列表数据
+    # 1. 广谱利好扫描：加入空头挤压、内幕增持、重大合同、突发收购传闻等
     query = """
-    Latest top 15 unusual options activity for US small-cap stocks today. 
-    Find stocks with high Call volume relative to Open Interest (Vol/OI > 5).
-    Focus on tickers under $15 with massive bull sweeps.
-    Extract specific stock symbols ($TICKER) for companies like biotech or AI startups.
+    US stock market high-conviction catalysts Jan 16-26, 2026:
+    1. Upcoming FDA PDUFA, clinical data readouts, or patent approvals.
+    2. Anticipated earnings pre-announcements or massive contract awards (Government/Big Tech).
+    3. High short-interest stocks (SI > 20%) with new positive news or volume spikes.
+    4. SEC Form 4 significant insider buying in small-cap companies this week.
+    5. Stocks consolidating near support with massive short-term call sweeps (expiring next 10 days).
     """
     
-    print(f"📡 正在全市场扫描 10 个以上的小市值期权异动标的...")
-    # 增加返回结果数量，确保 AI 有足够的原始材料
-    search_data = tavily.search(query=query, search_depth="advanced", max_results=10)
+    print(f"📡 正在全方位扫描“硬核利好”：锁定 2-10 天内具备爆发基因的波段标的...")
+    search_data = tavily.search(query=query, search_depth="advanced", max_results=20)
 
-    # 2. 策略 Prompt：要求强制输出代码并提供 10 个标的
+    # 2. 策略 Prompt：要求 AI 给出“爆发逻辑”和“稳妥程度”
     prompt = f"""
     分析数据：{search_data}
 
-    任务：作为资深分析师，从异动名单中精选出【10 个】最具潜力的个股。
+    作为职业波段交易员，请从数据中提取 8-10 只具备【下周爆发潜力】的个股。
     
-    硬性要求：
-    - 必须输出【股票代码】（如 BTON, KALA）。如果原始信息只有公司名，请结合常识反查补齐。
-    - 排除市值超过 50 亿美金的大票（如 TSLA, NVDA 等）。
-    - 优先选择那些在低位横盘，但期权突然放量的标的。
+    筛选准则（硬核）：
+    - 催化剂时效：利好必须在未来 2-10 天内兑现或发酵。
+    - 资金面：期权成交量（Vol）必须远大于持仓量（OI），且到期日极短。
+    - 排除项：排除涨幅已超过 50% 的追高票，寻找 OKLO 式的“横盘+突发异动”模型。
 
-    请严格按以下表格输出 10 个结果：
-    | 代码 | 股价 | 异常期权 (行权价/日期) | Vol/OI 异动倍数 | 庄家动作 (扫货/防御) | 目标引力位 | 逻辑简述 |
+    请严格按此表格输出：
+    | 代码 | 当前价 | 催化剂类型 (合同/FDA/财报/空头挤压/内幕) | 关键日期 | 期权异动 (价位/下周到期) | 爆发概率 (1-5星) | 目标位 |
     | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
     """
 
     response = model.generate_content(prompt)
-    print("\n" + "💎"*15)
-    print("🔥 小市值期权黑马雷达 (10 标的强化版) 🔥")
-    print("💎"*15)
+    print("\n" + "🚀"*15)
+    print("🔥 全能利好·短期爆发雷达 (波段精选) 🔥")
+    print("🚀"*15)
     print(response.text)
 
 if __name__ == "__main__":
-    run_options_intelligence()
+    run_short_term_burst_sniper()
