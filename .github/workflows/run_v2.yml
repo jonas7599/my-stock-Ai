@@ -1,8 +1,9 @@
-name: Stock AI Bot - Momentum # 机器人名字：连涨动能版
+name: Stock AI Bot - Trend Intelligence
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '15 21 * * *' # 设定在美股收盘 15 分钟后运行，数据最准
+    # 北京时间 05:00 (UTC 21:00)
+    - cron: '0 21 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   analyze:
@@ -12,9 +13,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: pip install --upgrade google-generativeai tavily-python
-      - name: Run Momentum Prediction
+      - run: pip install --upgrade google-generativeai tavily-python requests
+      - name: Run Trend Intelligence
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-        run: python main_v2.py
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: python main_v3.py
