@@ -1,5 +1,6 @@
 import os
 import datetime
+import time
 from google import genai
 from tavily import TavilyClient
 
@@ -17,34 +18,36 @@ def get_next_friday():
 def run_options_led_stock_sniper():
     expiry_date = get_next_friday()
     
-    # 搜索策略：股价硬限 $100 以下，锁定异动标的
+    # 策略核心：股价硬限 $100 以下，不限市值
     query = (
         f"US stocks NASDAQ NYSE unusual call options volume for {expiry_date} expiration, "
-        f"current price under $100 USD, Vol/OI > 5, "
-        f"focus on OKLO, SMCI, RKLB, IONQ, LUNR."
+        f"stock price under $100 USD, Vol/OI > 5, "
+        f"focus on high momentum names like OKLO, SMCI, RKLB, IONQ."
     )
     
-    print(f"📡 正在扫描 $100 以下美股异动 (目标合约: {expiry_date})...")
+    print(f"📡 正在扫描 $100 以下美股异动 (目标日: {expiry_date})...")
     
     try:
-        # 获取实时数据
+        # 1. 搜索数据
         search_data = tavily.search(query=query, search_depth="advanced", max_results=20)
 
-        # 任务指令：排除所有高价股，锁定爆发逻辑
-        prompt = f"""
-        分析数据：{search_data}
+        # 2. 加入防撞保护：在调用 AI 前强制休息 5 秒，防止 429 报错
+        time.sleep(5)
 
+        # 3. 任务指令：仅看价格，排除废话
+        prompt = f"""
+        数据：{search_data}
         任务：找出符合条件的爆发股。
         
-        ⛔ 强制过滤：
-        1. 股价必须在 $5 到 $100 之间（超过 $100 直接剔除）。
-        2. 必须是美股 Ticker。
+        ⛔ 限制：
+        1. 股价必须低于 $100。超过 $100 的一律剔除（如目前的 NVDA, MSTR 等）。
+        2. 代码必须是美股代码。
 
-        ✅ 核心重点：
+        ✅ 核心：
         - 筛选 {expiry_date} 到期的异常 Call 单。
-        - 寻找未来 10 天内有硬核催化剂（合同、并购、FDA）的标的。
+        - 寻找未来 10 天内的强力催化剂。
 
-        输出表格：
+        输出格式：
         | 代码 | 股价 | 市值 | 异动期权({expiry_date}) | Vol/OI | 爆发逻辑 | 信心指数 |
         | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
         """
@@ -61,7 +64,11 @@ def run_options_led_stock_sniper():
         print(response.text.strip())
 
     except Exception as e:
-        print(f"❌ 运行失败: {str(e)}")
+        # 如果遇到 429 频率限制报错，提供清晰提示
+        if "429" in str(e):
+            print("❌ 错误：触发了 API 频率限制 (429)。请等一分钟后再试，或降低 GitHub Actions 的运行频率。")
+        else:
+            print(f"❌ 运行故障: {str(e)}")
 
 if __name__ == "__main__":
     run_options_led_stock_sniper()
