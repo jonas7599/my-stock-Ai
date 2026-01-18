@@ -20,4 +20,5 @@ jobs:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: python main_v3.py
+        # 修正：根据 main_v2.py 的内部逻辑，这里应改为 v2
+        run: python main_v2.py
