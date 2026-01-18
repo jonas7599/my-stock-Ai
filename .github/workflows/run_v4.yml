@@ -1,4 +1,4 @@
-name: Stock AI Bot - Options Intelligence
+name: 股票智能机器人 - 期权大单异动监控
 on:
   schedule:
     # 北京时间 23:30 (UTC 15:30)
@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install --upgrade google-generativeai tavily-python requests
-      - name: Run Options Intelligence
+      - name: 运行期权异动分析
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
