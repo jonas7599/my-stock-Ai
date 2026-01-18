@@ -1,4 +1,5 @@
 name: 股票智能机器人 - 期权大单异动监控
+
 on:
   schedule:
     # 北京时间 23:30 (UTC 15:30)
@@ -10,10 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: pip install --upgrade google-generativeai tavily-python requests
+
+      - name: 安装依赖
+        run: pip install --upgrade google-genai tavily-python requests
+
       - name: 运行期权异动分析
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
