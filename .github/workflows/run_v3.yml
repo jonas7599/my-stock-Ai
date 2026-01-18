@@ -1,8 +1,9 @@
-name: Stock AI Bot - Ignition Hunter
+name: Stock AI Bot - Sideways Intelligence
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '45 21 * * *' # 每天在美股收盘后自动运行
+    # 北京时间 02:00 (UTC 18:00)
+    - cron: '0 18 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   analyze:
@@ -12,9 +13,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: pip install --upgrade google-generativeai tavily-python
-      - name: Run Ignition Hunter
+      - run: pip install --upgrade google-generativeai tavily-python requests
+      - name: Run Sideways Intelligence
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-        run: python main_v3.py
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: python main_v2.py
