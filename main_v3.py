@@ -1,55 +1,61 @@
-# 1. 初始化
+import os
+import datetime
+import google.generativeai as genai
+from tavily import TavilyClient
+
+# 1. 初始化（从环境变量读取 KEY，确保安全性）
 tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def run_ignition_hunter():
-    # 自动获取最新模型
+    # 保持使用你要求的现有模型
     model = genai.GenerativeModel('gemini-1.5-flash')
 
-    # 动态日期逻辑
+    # 动态日期逻辑：确保扫描的是最新交易日
     today = datetime.date.today()
     target_date = today if today.weekday() < 5 else today - datetime.timedelta(days=today.weekday() - 4)
     date_str = target_date.strftime("%Y-%m-%d")
 
-    # 2. 核心策略搜索指令：聚焦“横盘 + 吸筹特征 + 催化剂”
-    # 重点在于搜寻：1. 缩量横盘 2. 价格未动但OBV/成交量异动 3. 伴随利好公告
+    # 2. 策略搜索指令 (Query)：
+    # 严格按照：全行业、小市值($1-$50)、横盘整理(Consolidation)、吸筹异动(Accumulation/Volume spike)、利好新闻
     query = f"""
-    Find 10 US small-cap stocks ($1-$50, Market Cap < $2B) on {date_str} that meet:
-    1. 2-4 weeks of horizontal consolidation/flat base (VCP pattern).
-    2. Signs of institutional accumulation: OBV rising or "Pocket Pivot" volume spikes while price remains in a tight range.
-    3. Recent positive catalysts: FDA, partnership, new contracts, or earnings beat within last 48 hours.
-    Search across ALL sectors. Return tickers with price and specific volume activity.
+    Comprehensive US stock market scan for {date_str}:
+    1. Focus on small-cap stocks ($1-$50, Market Cap < $2B) from ANY industry.
+    2. Identify tickers in a tight 2-4 week consolidation base with declining volume (VCP).
+    3. Spot signs of stealth accumulation: OBV rising or volume spikes (>2x avg) while price is relatively flat.
+    4. Must have major recent news (FDA, contracts, earnings, partnerships) within 48h.
+    List the top 10 potential breakout candidates.
     """
 
     print(f"🚀 正在执行全行业策略扫描 (分析日期: {date_str})...")
     search_data = tavily.search(query=query, search_depth="advanced")
 
-    # 3. 强化 Prompt：植入吸筹识别逻辑与严格格式化要求
+    # 3. 策略分析指令 (Prompt)：
+    # 强制 AI 按照“吸筹逻辑”进行二次过滤，并按你要求的格式输出
     prompt = f"""
-    你是一名顶级美股策略分析师，擅长捕捉“机构吸筹后的首波启动”。
     分析以下实时数据：{search_data}
 
-    ### 筛选任务：
-    从全行业中选出 5 只最符合【吸筹结束、准备启动】特征的标的。
-    
-    ### 核心策略指标：
-    1. **横盘整理**：股价在过去 2-4 周波动极小，形成紧凑的“地基”。
-    2. **机构吸筹**：成交量在横盘末端出现非对称增长（涨时放量，跌时极度缩量），即“口袋支点”。
-    3. **市值/价格**：市值 < 20亿美金，价格介于 $1 - $50 之间。
-    4. **利好驱动**：必须有具体的近期新闻（8-K表、合同、产品进展）作为引爆点。
+    任务：从全行业中找出 5 只【真实存在】且在 {date_str} 表现出“吸筹结束、准备启动”特征的美股。
+
+    ### 筛选核心逻辑：
+    1. **横盘整理**：股价近期波动极小，处于窄幅箱体。
+    2. **吸筹特征**：价格还未暴涨，但成交量已经出现明显异动（机构悄悄进场）。
+    3. **市值/价格**：市值小于 20 亿美金，股价在 $1 到 $50 之间。
+    4. **利好催化**：必须有具体的利好新闻（如合同、财报、产品进展等）。
 
     ### 严格执行原则：
-    1. **全行业覆盖**：不限于科技或生物医药，只要逻辑硬，全行业均可。
-    2. **拒绝幻觉**：代码必须真实，逻辑必须基于数据中的成交量异动。
-    3. **禁止废话**：严禁开头总结，直接以 Markdown 表格形式输出。
+    1. 覆盖全行业：不要只盯着科技股，关注工业、能源、消费等所有板块。
+    2. 拒绝幻觉：代码必须真实存在。
+    3. 格式要求：严禁任何解释性文字，直接输出以下表格。
 
-    请按以下格式输出：
     | 代码 | 所属行业 | 当前价格 | 成交异动特征 | 启动逻辑简述 | 关键支撑/阻力 |
     | :--- | :--- | :--- | :--- | :--- | :--- |
     """
 
+    # 生成分析结果
     response = model.generate_content(prompt)
 
+    # 4. 输出结果
     print(f"\n🎯 全行业点火猎人·实时扫描报告 ({date_str}) 🎯")
     print(response.text)
 
